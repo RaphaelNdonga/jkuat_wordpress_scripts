@@ -1,15 +1,12 @@
 #!bin/env python
-import re
 import mysql.connector
 from mysql.connector import Error
 
 EXECQUERY = """
 UPDATE wp_users SET user_pass = MD5(12345678) WHERE user_login = 'ibr';
 """
-# READQUERY = """
-# show databases ;
-# """
-READQUERY = """
+
+DB_QUERY = """
 select table_schema as database_name from information_schema.tables
 where table_type = 'BASE TABLE'
       and table_schema not in ('information_schema', 'sys',
@@ -19,6 +16,7 @@ order by table_schema;
 """
 
 DATABASES = []
+USER_TABLES = []
 
 
 def create_server_connection(host_name, user_name, user_password, db_name):
@@ -55,18 +53,26 @@ def read_query(connection, query):
 
 
 def main():
-    connection = create_server_connection(
+    main_connection = create_server_connection(
         "localhost", "developer", "dev", "information_schema"
     )
-    # execute_query(connection, EXECQUERY)
-    results = read_query(connection, READQUERY)
-    for result in results:
-        DATABASES.append(list(result)[0])
+    # read_query tends to return a list of tuples.
+
+    db_query_results = read_query(main_connection, DB_QUERY)
+    for db_query_result in db_query_results:
+        DATABASES.append(list(db_query_result)[0])
     print(DATABASES)
 
-    for i in DATABASES:
-        exec_query = f"UPDATE {i}.wp_users SET user_pass = MD5(12345678) WHERE user_login = 'developer';"
-        execute_query(connection, exec_query)
+    for database in DATABASES:
+
+        db_connection = create_server_connection(
+            "localhost", "developer", "dev", database
+        )
+        user_tables_query = f"SELECT table_name from information_schema.tables WHERE table_name like '%users%' AND table_schema LIKE '{database}'"
+        user_tables_query_results = read_query(main_connection, user_tables_query)
+        for user_tables_query_result in user_tables_query_results:
+            update_pass_query = f"UPDATE {database}.{user_tables_query_result[0]} SET user_pass = MD5(1234567) WHERE user_login = 'developer';"
+            execute_query(db_connection, update_pass_query)
 
 
 main()
