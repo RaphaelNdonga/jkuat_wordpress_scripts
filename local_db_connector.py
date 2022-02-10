@@ -60,7 +60,7 @@ def main():
 
     db_query_results = read_query(main_connection, DB_QUERY)
     for db_query_result in db_query_results:
-        DATABASES.append(list(db_query_result)[0])
+        DATABASES.append(db_query_result[0])
     print(DATABASES)
 
     for database in DATABASES:
