@@ -1,4 +1,7 @@
+import os
 import shutil
+
+source = "/home/raphael/Downloads/aawp"
 
 
 def update_wordpress(source, destination):
@@ -6,11 +9,19 @@ def update_wordpress(source, destination):
 
 
 def main():
-    # source directory: 'home/jkuatack/public_html/departments/aawp
-    input1 = input("Source directory: ")
-    # destination directory can be all the wordpress folders
-    input2 = input("Destination directory: ")
-    update_wordpress(input1, input2)
+    directory = input("Enter filepath: ")
+    dig_directory(directory)
+
+
+def dig_directory(pathname):
+    folder = os.listdir(pathname)
+    if "wp-admin" and "wp-content" and "wp-includes" in folder:
+        print(f"{pathname} This is a wordpress folder!")
+        update_wordpress(source, pathname)
+    for i in folder:
+        new_path_name = os.path.join(pathname, i)
+        if os.path.isdir(new_path_name):
+            dig_directory(new_path_name)
 
 
 main()
